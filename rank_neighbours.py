@@ -1,17 +1,17 @@
 import pandas as pd
-#import numpy as np
 import matplotlib.pyplot as plt
 
 pd.options.display.max_rows = 9999
 
-list_of_ranked_neighbours = []
+# Read the CSV as a dataframe and sort the dataframe
+# Change to path to the CSV file, or put a copy of the CSV file in the same folder as this python script
+# Comment: You can add or remove which columns to include, but 'start', 'end', 'protein.id', 'is.neighbour', 'strand' and 'COG_category' are necessary for the calculations
 
-file_name = "50_15"
-
+file_name = "50_15" # Change accoring to your filename
 df = pd.read_csv('df_' + file_name + '.csv', usecols=['seqid', 'start', 'end', 'protein.id', 'ID', 'is.neighbour', 'clade', 'COG_category', 'PFAMs', 'product', 'Description', 'strand'])
 grouped = df.sort_values(by=['protein.id']).groupby('protein.id')
 
-
+# Function that ranks the neighbour protein genes based on their distance to the protein of interest (the hydrogenase genes) and calculates the distance on the genome
 def neighbour_rank(group_df):
 
     protein_of_interest = None
@@ -87,18 +87,20 @@ def neighbour_rank(group_df):
 
     return df_ranked
 
+list_of_ranked_neighbours = []
+
 for protein_id, group_df in grouped:
-    #print(f"Processing group: {protein.id}")
     ranked_neighbours = neighbour_rank(group_df.reset_index(drop=True))
     list_of_ranked_neighbours.append(ranked_neighbours)
     
 df_combined = pd.concat(list_of_ranked_neighbours, ignore_index=True)
 sorted_by_rank = df_combined.sort_values(by='rank')
 
+# Creates a CSV file with the ranks, distances and previously read columns (can be skipped)
 sorted_by_rank.to_csv('ranks_and_distance_df_' + file_name + '.csv', index=False)
 
+# Creates a dataframe to plot
 plot_data = sorted_by_rank.groupby(['rank', 'COG_category']).size().unstack(fill_value=0)
-#print(plot_data)
 
 cog_colors = {
     'J': "#9fb90a", 'A': '#aec7e8', 'K': '#98df8a', 'L': '#ffbb78',
@@ -111,6 +113,7 @@ cog_colors = {
     'No neighbour': "#e4e4e4"
 }
 
+# Plots the dataframe (not clade-specific)
 plot_data.plot(kind='bar', stacked=True, figsize=(10, 6), color=[cog_colors[c] for c in plot_data.columns])
 
 custom_labels = {
@@ -152,12 +155,14 @@ plt.xticks(fontsize=13)
 plt.yticks(fontsize=13)
 #plt.legend(title='COG Category', bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
-plt.savefig("nr_ne/" + file_name + ".png")
-#plt.show()
+
+# Save figure in pre-existing folder called "plots" (can be skipped)
+#plt.savefig("plots/" + file_name + ".png")
+plt.show()
 
 group_by_clade = sorted_by_rank.groupby(['clade', 'rank', 'COG_category']).size().unstack(fill_value=0)
-#group_by_clade.to_csv('megaplot_' + file_name + '.csv')
 
+# Makes clade-specific plots 
 for clade, clade_group in group_by_clade.groupby(level=0):
     subset = clade_group.droplevel(0)
     subset.plot(kind='bar', stacked=True, figsize=(10, 6), color=[cog_colors[c] for c in plot_data.columns])
@@ -170,6 +175,8 @@ for clade, clade_group in group_by_clade.groupby(level=0):
     plt.legend('', frameon=False)
     plt.title(f'Group {clade}', fontsize=25)
     plt.tight_layout()
-    plt.savefig("nr_ne/" + clade + ".png")
-    #plt.show()
+    
+    # Save figure in pre-existing folder called "plots" (can be skipped)
+    #plt.savefig("plots/" + clade + ".png")
+    plt.show()
 

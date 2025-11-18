@@ -1,17 +1,12 @@
 import pandas as pd
-#import numpy as np
 import matplotlib.pyplot as plt
 
 pd.options.display.max_rows = 9999
 
-list_of_ranked_neighbours = []
-
+# Read the XLSX file as a dataframe and sort the dataframe
+# Change to path to the XLSX file, or put a copy of the XLSX file in the same folder as this python script
 file_name = "D_domains"
-
 df = pd.read_excel(file_name + '.xlsx')
-
-#df = pd.read_csv('df_' + file_name + '.csv', usecols=['seqid', 'start', 'end', 'strand', 'PIGI', 'ID', 'is.neighbour', 'clade', 'COG_category', 'PFAMs', 'product', 'Description'])
-#grouped = df.sort_values(by=['PIGI']).groupby('PIGI')
 
 domain_colors = {
     'PHP': "#f03d76",
@@ -22,7 +17,7 @@ domain_colors = {
     'No neighbour': "#e4e4e4"
 }
 
-
+# Normalises the numbers of neighbours against the number of hydrogenase genes
 df_plot = df[df['rank'] != 0]
 ranks = sorted(df_plot['rank'].unique())
 plot_data = {}
@@ -40,20 +35,21 @@ cols = [c for c in plot_df_norm.columns if c != 'No neighbour'] + ['No neighbour
 plot_df_norm = plot_df_norm[cols]
 plot_df_norm = plot_df_norm.sort_index()
 
+# Plots the dataframe (not clade-specific)
 plot_df_norm.plot(kind='bar', stacked=True, figsize=(10,6), color=[domain_colors[c] for c in plot_df_norm.columns])
-#handles, labels = plt.gca().get_legend_handles_labels()
-#new_labels = [custom_labels.get(lbl, lbl) for lbl in labels]
 plt.legend(title='Domain', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
 plt.xlabel('Ranking', fontsize=15)
 plt.ylabel('Amount of Neighbours', fontsize=15)
 plt.xticks(fontsize=13)
 plt.yticks(fontsize=13)
 plt.title('Group D', fontsize=15)
-#plt.legend(title='COG Category', bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
-plt.savefig("D_domainplots/" + file_name + ".png")
-#plt.show()
 
+# Save figure in pre-existing folder called "D_domainplots" (can be skipped)
+#plt.savefig("D_domainplots/" + file_name + ".png")
+plt.show()
+
+# Makes clade-specific plots 
 for clade, clade_group in df_plot.groupby('clade'):
 
     ranks = sorted(clade_group['rank'].unique())
@@ -78,9 +74,9 @@ for clade, clade_group in df_plot.groupby('clade'):
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.title(f'Group {clade}', fontsize=25)
-    #plt.legend(title='Domain', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
-    #plt.legend(handles, new_labels, title='COG Category', bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.legend('', frameon=False)
+    plt.legend(title='Domain', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
     plt.tight_layout()
-    plt.savefig("D_domainplots/" + clade + file_name + ".png")
-    #plt.show()
+    
+    # Save figures in pre-existing folder called "D_domainplots" (can be skipped)
+    #plt.savefig("D_domainplots/" + clade + file_name + ".png")
+    plt.show()
